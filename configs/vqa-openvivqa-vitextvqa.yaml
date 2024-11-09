@@ -1,0 +1,18 @@
+datasets: ['openvivqa', 'vitextvqa']
+data_path: 'datasets'
+label_path: 'data/labels'
+experts: 'none' # 'none' for PrismerZ
+
+image_resolution: 480
+nexus_model: 'nexus_base' # 'prismer-large' for Prismer(Z)-Large
+freeze: 'freeze_vision'
+
+batch_size_train: 32 #   for 8 * 8 nodes [effective batch-size: 512]
+batch_size_test: 32
+init_lr: 5e-5
+weight_decay: 0.05
+min_lr: 0
+max_epoch: 20
+
+k_test: 16
+inference: 'rank'

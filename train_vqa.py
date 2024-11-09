@@ -4,6 +4,7 @@
 # To view a copy of this license, visit
 # https://github.com/NVlabs/prismer/blob/main/LICENSE
 
+import os
 import argparse
 import numpy as np
 import random
@@ -25,7 +26,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--mode', default='')
 parser.add_argument('--port', default='')
 
-parser.add_argument('--config', default='configs/vqa.yaml')
+parser.add_argument('--config', default='configs/vqa-openvivqa-vitextvqa.yaml')
 parser.add_argument('--from_checkpoint', action='store_true')
 parser.add_argument('--evaluate', action='store_true')
 parser.add_argument('--exp_name', default='', type=str)
@@ -35,7 +36,8 @@ parser.add_argument('--mixed_precision', default='fp16', type=str)
 parser.add_argument('--seed', default=42, type=int)
 args = parser.parse_args()
 
-config = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
+yml = yaml.YAML(typ='rt')
+config = yml.load(open(args.config, "r"))
 torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 random.seed(args.seed)
@@ -91,7 +93,7 @@ if not args.from_checkpoint:
     state_dict = torch.load(f'logging/pretrain_{args.exp_name}/pytorch_model.bin', map_location='cpu')
     state_dict['expert_encoder.positional_embedding'] = interpolate_pos_embed(state_dict['expert_encoder.positional_embedding'],
                                                                               len(model.expert_encoder.positional_embedding))
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict=False)
     start_epoch = 0
 else:
     state_dict = torch.load(f'logging/vqa_{args.exp_name}/pytorch_model.bin', map_location='cpu')
@@ -99,7 +101,7 @@ else:
         start_epoch = torch.load(f'logging/vqa_{args.exp_name}/epoch.pt')[0] + 1
     else:
         start_epoch = 0
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict=False)
     accelerator.print(f'Start re-training from checkpoint with Epoch {start_epoch}')
 
 optimizer = torch.optim.AdamW(params=filter(lambda p: p.requires_grad, model.parameters()),
@@ -167,7 +169,7 @@ with torch.no_grad():
 
 accelerator.wait_for_everyone()
 if accelerator.is_main_process:
-    json.dump(result, open(f'/results/vqa_results_{args.exp_name}.json', 'w'))
+    json.dump(result, open(f'./results/vqa_results_{args.exp_name}.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=4)
 
 
 total_time = time.time() - start_time

@@ -11,7 +11,7 @@ experts: 'none' # 'none' for PrismerZ
 image_resolution: 224
 nexus_model: 'nexus_base' # 'prismer-large' for Prismer(Z)-Large
 freeze: 'freeze_lang_vision'
-batch_size_train: 32 #   for 4 * 8 nodes [effective batch-size: 1024]
+batch_size_train: 128 #   for 4 * 8 nodes [effective batch-size: 1024]
 
 max_epoch: 20
 weight_decay: 0.05

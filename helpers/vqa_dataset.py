@@ -22,9 +22,17 @@ class VQA(Dataset):
                 self.data_list += json.load(open(os.path.join(self.data_path, 'vqav2_train_val.json'), 'r'))
             if 'vg' in config['datasets']:
                 self.data_list += json.load(open(os.path.join(self.data_path, 'vg_qa.json'), 'r'))
+            if "openvivqa" in config["datasets"]:
+                self.data_list += json.load(open(os.path.join(self.data_path, "openvivqa", "openvivqa_train_data.json"), "r"))
+            if "vitextvqa" in config["datasets"]:
+                self.data_list += json.load(open(os.path.join(self.data_path, "vitextvqa", "vitextvqa_train_data.json"), "r"))
         else:
-            self.data_list = json.load(open(os.path.join(self.data_path, 'vqav2_test.json'), 'r'))
-            self.answer_list = json.load(open(os.path.join(self.data_path, 'answer_list.json'), 'r'))
+            # self.data_list = json.load(open(os.path.join(self.data_path, 'vqav2_test.json'), 'r'))
+            # self.answer_list = json.load(open(os.path.join(self.data_path, 'answer_list.json'), 'r'))
+            self.data_list = json.load(open(os.path.join(self.data_path, "openvivqa", "openvivqa_dev_data.json"), "r"))
+            self.data_list += json.load(open(os.path.join(self.data_path, "vitextvqa", "vitextvqa_dev_data.json"), "r"))
+            self.answer_list = json.load(open(os.path.join(self.data_path, "openvivqa", "openvivqa_dev_answers.json"), "r"))
+            self.answer_list += json.load(open(os.path.join(self.data_path, "vitextvqa", "vitextvqa_dev_answers.json"), "r"))
 
     def __len__(self):
         return len(self.data_list)
@@ -36,6 +44,10 @@ class VQA(Dataset):
             image, labels, labels_info = get_expert_labels(self.data_path, self.label_path, data['image'], 'vqav2', self.experts)
         elif data['dataset'] == 'vg':
             image, labels, labels_info = get_expert_labels(self.data_path, self.label_path, data['image'], 'vg', self.experts)
+        elif data["dataset"] == "openvivqa":
+            image, labels, labels_info = get_expert_labels(self.data_path, self.label_path, data["image"], "openvivqa", self.experts)
+        elif data["dataset"] == "vitextvqa":
+            image, labels, labels_info = get_expert_labels(self.data_path, self.label_path, data["image"], "vitextvqa", self.experts)
 
         experts = self.transform(image, labels)
         experts = post_label_process(experts, labels_info)
@@ -43,7 +55,7 @@ class VQA(Dataset):
         if self.train:
             question = pre_question(data['question'], max_words=30)
             answers = data['answer']
-            weights = torch.tensor(data['weight']) if data['dataset'] != 'vg' else torch.tensor(0.2)
+            weights = torch.tensor(data['weight']) if data["dataset"] != "vg" and data["dataset"] != "openvivqa" and data["dataset"] != "vitextvqa" else torch.tensor(0.2)
             return experts, question, answers, weights
         else:
             question = pre_question(data['question'], max_words=30)
